@@ -245,132 +245,173 @@ const STEPS = 12;
 const DIM = 64;
 const HDIM = 128;
 
-// ═══ 1984 WORD VOCABULARY (from Penelope) ═══
+// ═══ 1984 WORD VOCABULARY (loaded from nanojanus.txt with inline fallback) ═══
 const WORDS = [
-"the","of","and","to","in","a","is","that","for","it","was","on","are","be","with","as",
-"at","by","this","from","or","an","but","not","you","all","can","we","her","one","do","has",
-"have","will","they","my","he","she","no","so","if","out","up","what","about","their","them",
-"would","into","been","when","who","more","some","time","very","than","could","other","its",
-"new","just","these","also","now","any","only","come","made","may","way","then","after","over",
-"such","how","think","our","much","where","get","like","most","well","know","take","back","still",
-"here","good","did","see","go","through","own","too","long","work","make","find","down","first",
-"day","between","even","being","same","another","last","never","great","old","because","before",
-"life","right","off","many","world","us","must","should","while","home","under","water","room",
-"night","around","live","something","nothing","every","place","say","once","without","again",
-"always","left","hand","turn","look","run","away","end","year","small","big","part","people",
-"man","woman","child","house","point","door","eye","head","face","side","light","dark","open",
-"close","name","word","thing","let","keep","give","few","mind","help","tell","might","city",
-"follow","begin","stand","move","hold","try","seem","walk","show","feel","high","low","put",
-"came","together","body","enough","story","boy","girl","power","read","write","play","air",
-"land","far","near","line","state","set","call","start","white","black","red","blue","ground",
-"change","went","sit","bring","carry","watch","real","among","second","later","young","need",
-"want","until","eat","full","four","sure","order","love","heart","true","voice","fall","reason",
-"cold","fire","hot","hard","soft","stone","rain","wind","tree","river","sea","mountain","road",
-"field","forest","garden","sky","sun","moon","star","earth","morning","evening","spring","summer",
-"winter","north","south","east","west","floor","wall","window","table","bed","chair","paper",
-"money","music","song","color","green","gold","iron","blood","bone","skin","hair","animal",
-"bird","fish","horse","dog","cat","flower","grass","leaf","snow","ice","sand","dust","smoke",
-"cloud","shadow","mirror","glass","silver","silk","cotton","wool","bread","milk","wine","oil",
-"sugar","salt","fruit","seed","root","branch","wave","flame","steel","copper","diamond",
-"pearl","crystal","thunder","lightning","fog","dew","storm","ocean","lake","island","valley",
-"canyon","plateau","tundra","desert","oasis","dune","glacier","volcano","peninsula",
-"kingdom","empire","castle","tower","bridge","gate","harbor","market","temple","church",
-"prison","library","school","hospital","garden","palace","fortress","monument","fountain",
-"labyrinth","death","life","birth","dream","sleep","wake","hunger","thirst","fear","rage",
-"love","hate","joy","sorrow","hope","despair","peace","war","freedom","justice","mercy","truth",
-"beauty","silence","chaos","order","pattern","rhythm","frequency","resonance","harmony",
-"dissonance","entropy","emergence","threshold","memory","future","past","present","eternal",
-"infinite","void","abyss","horizon","boundary","surface","depth","weight","measure","scale",
-"balance","gravity","force","pressure","tension","energy","matter","spirit","soul","ghost",
-"angel","demon","god","devil","heaven","hell","fate","destiny","prophecy","oracle",
-"sacrifice","ritual","ceremony","prayer","blessing","curse","wound","healing","poison",
-"medicine","fever","pulse","breath","whisper","echo","silence","scream","cry","laugh",
-"dance","mask","crown","throne","sword","shield","arrow","bow","spear","hammer","chain",
-"key","lock","ring","circle","spiral","cross","triangle","square","sphere","cube","pyramid",
-"tunnel","path","bridge","door","window","mirror","lens","prism","shadow","light",
-"darkness","dawn","dusk","midnight","noon","hour","moment","century","millennium",
-"beginning","ending","origin","return","journey","quest","trial","victory","defeat",
-"surrender","resistance","rebellion","revolution","creation","destruction","transformation",
-"evolution","dissolution","resurrection","revelation","apocalypse","genesis","exodus",
-"wilderness","promised","covenant","testament","judgment","salvation","damnation","purgatory",
-"limbo","nirvana","karma","dharma","mantra","sutra","koan","zen","tao","yin","yang",
-"element","alchemy","philosopher","stone","elixir","potion","spell","enchantment","illusion",
-"reality","simulation","matrix","code","signal","noise","data","algorithm","equation",
-"theorem","axiom","paradox","infinity","zero","one","two","three","seven","twelve",
-"hundred","thousand","million","first","last","next","final","absolute","relative",
-"abstract","concrete","solid","liquid","gas","plasma","atom","molecule","cell","organ",
-"organism","species","genus","kingdom","universe","galaxy","constellation","nebula",
-"supernova","singularity","dimension","vector","tensor","field","wave","particle","quantum",
-"string","membrane","vacuum","void","ether","dark","antimatter","entropy","syntropy",
-"emergence","complexity","simplicity","elegance","symmetry","asymmetry","fractal","chaos",
-"strange","attractor","butterfly","tornado","hurricane","earthquake","tsunami","avalanche",
-"erosion","metamorphosis","chrysalis","cocoon","larva","pupa","caterpillar","moth",
-"spider","web","nest","hive","swarm","flock","pack","herd","tribe","nation","civilization",
-"culture","language","alphabet","symbol","sign","meaning","sense","perception","consciousness",
-"awareness","attention","focus","intention","will","desire","need","drive","instinct",
-"intuition","reason","logic","imagination","creativity","inspiration","revelation",
-"epiphany","insight","wisdom","knowledge","information","understanding","comprehension",
-"recognition","memory","forgetting","remembering","nostalgia","longing","yearning",
-"wandering","searching","finding","losing","keeping","releasing","holding","letting",
-"falling","rising","floating","sinking","drowning","breathing","living","dying",
-"born","unborn","reborn","undead","immortal","mortal","fragile","resilient","broken",
-"whole","empty","full","open","closed","hidden","revealed","sacred","profane","pure",
-"corrupt","innocent","guilty","free","bound","wild","tame","raw","refined","crude",
-"elegant","simple","complex","deep","shallow","wide","narrow","long","short","tall",
-"thin","thick","heavy","light","fast","slow","loud","quiet","sharp","dull","smooth","rough",
-"wet","dry","warm","cool","sweet","bitter","sour","acid","alkaline","neutral","positive",
-"negative","active","passive","dynamic","static","stable","unstable","volatile",
-"magnetic","electric","nuclear","thermal","acoustic","optical","digital","analog",
-"binary","decimal","hexagonal","circular","linear","exponential","logarithmic",
-"harmonic","melodic","rhythmic","sonic","subsonic","ultrasonic","infrared","ultraviolet",
-"visible","invisible","transparent","opaque","translucent","reflective","absorbing",
-"radiating","oscillating","vibrating","pulsating","resonating","amplifying","attenuating",
-"filtering","modulating","encoding","decoding","transmitting","receiving",
-"connecting","disconnecting","integrating","differentiating","converging","diverging",
-"ascending","descending","expanding","contracting","inflating","deflating",
-"accelerating","decelerating","rotating","orbiting","spiraling","undulating",
-"crystallizing","dissolving","precipitating","evaporating","condensing","sublimating",
-"oxidizing","reducing","catalyzing","inhibiting","stimulating","suppressing",
-"generating","consuming","storing","releasing","absorbing","reflecting","refracting",
-"diffracting","interfering","reinforcing","canceling","superposing","entangling",
-"collapsing","observing","measuring","calculating","predicting","determining",
-"choosing","deciding","acting","reacting","responding","adapting","evolving","mutating",
-"selecting","breeding","cultivating","harvesting","planting","growing","blooming",
-"wilting","decaying","decomposing","fermenting","distilling","purifying","contaminating",
-"polluting","cleaning","restoring","preserving","destroying","rebuilding","renovating",
-"designing","engineering","manufacturing","assembling","disassembling","recycling",
-"composting","burning","freezing","melting","boiling","steaming","dripping","flowing",
-"flooding","overflowing","draining","filtering","sifting","sorting","organizing",
-"arranging","distributing","collecting","gathering","scattering","dispersing",
-"concentrating","diluting","mixing","separating","combining","splitting","merging",
-"joining","welding","soldering","gluing","tying","binding","wrapping","unwrapping",
-"folding","unfolding","stretching","compressing","bending","twisting","turning",
-"spinning","rolling","sliding","gliding","skating","skiing","surfing","diving",
-"swimming","sailing","rowing","paddling","steering","navigating","exploring",
-"discovering","inventing","creating","imagining","dreaming","hoping","wishing",
-"praying","meditating","contemplating","reflecting","pondering","wondering",
-"questioning","answering","solving","resolving","concluding","summarizing",
-"abstract","painting","sculpture","architecture","poetry","prose","drama",
-"comedy","tragedy","opera","symphony","concerto","sonata","fugue","canon",
-"prelude","overture","interlude","finale","coda","verse","chorus","refrain",
-"melody","harmony","counterpoint","dissonance","resolution","cadence","tempo",
-"andante","allegro","adagio","fortissimo","pianissimo","crescendo","diminuendo",
-"staccato","legato","vibrato","tremolo","arpeggio","glissando","portamento",
-"photograph","letter","book","page","chapter","verse","sentence","paragraph",
-"word","alphabet","number","symbol","equation","formula","theorem","proof",
-"hypothesis","theory","law","principle","axiom","postulate","lemma","corollary",
-"conjecture","paradox","dilemma","enigma","mystery","puzzle","riddle","cipher",
-"code","signal","message","communication","language","speech","voice","whisper",
-"murmur","shout","scream","cry","laugh","sigh","groan","moan","hum","buzz",
-"hiss","crack","snap","pop","bang","boom","crash","splash","drip","flow",
-"pour","spray","mist","fog","cloud","rain","snow","hail","sleet","frost",
-"ice","thaw","melt","steam","vapor","gas","smoke","ash","ember","spark",
-"flame","fire","blaze","inferno","furnace","forge","anvil","hammer","tongs",
-"bellows","chimney","hearth","altar","candle","torch","lantern","lamp","beacon",
-"lighthouse","compass","telescope","microscope","kaleidoscope","periscope"
+"flesh","bone","blood","skin","hand","eye","mouth","tongue","heart","lung","brain","skull","spine","rib","jaw","knee",
+"elbow","wrist","ankle","shoulder","finger","thumb","nail","hair","brow","cheek","chin","lip","tooth","gum","vein","artery",
+"nerve","muscle","tendon","joint","hip","thigh","calf","shin","chest","belly","navel","palm","sole","heel","toe","lobe",
+"iris","pupil","nostril","throat","neck","scalp","temple","forehead","pelvis","bladder","kidney","liver","stomach","intestine","colon","pancreas",
+"spleen","marrow","cartilage","ligament","diaphragm","esophagus","larynx","trachea","bronchus","sternum","clavicle","scapula","humerus","radius","ulna","femur",
+"tibia","fibula","patella","vertebra","sacrum","cranium","mandible","phalanx","metatarsal","metacarpal","retina","cornea","eardrum","cochlea","bicep","tricep",
+"abdomen","torso","limb","organ","sky","rain","wind","stone","river","mountain","tree","forest","ocean","cloud","meadow","valley",
+"cliff","cave","island","lake","stream","pond","waterfall","glacier","volcano","desert","prairie","marsh","swamp","bog","canyon","gorge",
+"plateau","ridge","hill","summit","peak","slope","dune","reef","shore","coast","bay","inlet","fjord","delta","estuary","geyser",
+"spring","brook","creek","ravine","bluff","mesa","tundra","steppe","savanna","jungle","thicket","grove","glade","clearing","undergrowth","canopy",
+"moss","lichen","fern","ivy","vine","root","bark","branch","twig","leaf","petal","bud","bloom","blossom","seed","pollen",
+"nectar","thorn","sap","acorn","pinecone","mushroom","fungus","coral","seaweed","kelp","driftwood","pebble","boulder","gravel","sand","clay",
+"silt","loam","topsoil","bedrock","granite","limestone","sandstone","obsidian","fear","love","rage","joy","grief","sorrow","hope","despair",
+"anger","bliss","calm","panic","shame","guilt","pride","envy","jealousy","contempt","disgust","pity","compassion","sympathy","empathy","longing",
+"yearning","nostalgia","regret","remorse","anguish","agony","ecstasy","euphoria","melancholy","gloom","dread","terror","horror","awe","wonder","delight",
+"pleasure","satisfaction","contentment","serenity","tranquility","anxiety","worry","stress","tension","frustration","irritation","annoyance","boredom","apathy","indifference","enthusiasm",
+"excitement","passion","desire","lust","affection","tenderness","warmth","fondness","devotion","adoration","reverence","gratitude","relief","comfort","courage","bravery",
+"valor","fortitude","resilience","vulnerability","humility","modesty","vanity","arrogance","hatred","loathing","malice","spite","resentment","bitterness","wrath","fury",
+"outrage","indignation","bewilderment","confusion","surprise","shock","dismay","heartbreak","torment","suffering","misery","woe","moment","second","hour","day",
+"past","future","morning","evening","midnight","dawn","dusk","twilight","noon","afternoon","yesterday","tomorrow","today","week","month","year",
+"decade","century","millennium","epoch","era","age","season","summer","autumn","winter","instant","eternity","forever","interval","duration","tempo",
+"rhythm","cycle","phase","period","deadline","sunset","sunrise","nightfall","daybreak","equinox","solstice","chronicle","timeline","war","peace","king",
+"soldier","law","crime","justice","nation","citizen","rebel","tyrant","emperor","peasant","noble","knight","judge","priest","merchant","slave",
+"exile","council","parliament","senate","republic","empire","kingdom","colony","province","district","border","treaty","alliance","revolt","revolution","conquest",
+"invasion","siege","truce","surrender","victory","defeat","battle","army","navy","militia","guard","captain","general","admiral","sergeant","prisoner",
+"refugee","immigrant","diplomat","ambassador","governor","mayor","president","minister","chancellor","election","ballot","vote","campaign","protest","rally","strike",
+"boycott","sanction","embargo","tax","tariff","subsidy","welfare","pension","charter","constitution","amendment","decree","edict","tribunal","verdict","sentence",
+"pardon","clemency","statute","ordinance","regulation","mandate","referendum","aristocrat","bourgeois","proletariat","oligarch","despot","sovereign","vassal","serf","herald",
+"envoy","truth","lie","meaning","symbol","essence","pattern","paradox","mystery","riddle","enigma","concept","idea","thought","theory","principle",
+"doctrine","dogma","belief","faith","reason","logic","intuition","insight","wisdom","knowledge","ignorance","illusion","reality","fantasy","dream","vision",
+"perception","awareness","understanding","comprehension","notion","hypothesis","assumption","premise","conclusion","argument","evidence","proof","certainty","doubt","skepticism","ambiguity",
+"clarity","obscurity","complexity","simplicity","unity","duality","plurality","infinity","zero","nothing","something","everything","void","chaos","harmony","balance",
+"symmetry","proportion","analogy","metaphor","allegory","irony","satire","dialectic","synthesis","analysis","entropy","emergence","structure","function","relation","causation",
+"correlation","abstraction","generalization","specification","category","archetype","prototype","model","paradigm","framework","matrix","threshold","boundary","limit","spectrum","gradient",
+"continuum","dimension","axis","origin","terminus","create","destroy","build","break","transform","rise","fall","push","pull","lift","carry",
+"throw","catch","drop","cut","tear","bend","twist","stretch","squeeze","crush","grind","shatter","collapse","explode","implode","ignite",
+"extinguish","melt","freeze","boil","evaporate","condense","dissolve","absorb","emit","radiate","reflect","refract","vibrate","oscillate","rotate","spin",
+"orbit","drift","float","sink","dive","plunge","surge","recede","expand","contract","swell","shrink","grow","wither","flourish","decay",
+"erode","corrode","rust","tarnish","polish","sharpen","dull","harden","soften","temper","forge","weld","solder","rivet","clamp","bind",
+"untie","unravel","fold","unfold","wrap","unwrap","seal","open","close","lock","unlock","latch","bolt","hinge","pivot","lever",
+"crank","pump","siphon","funnel","filter","strain","sift","distill","metal","wood","glass","fabric","plastic","iron","steel","copper",
+"bronze","brass","gold","silver","platinum","tin","lead","zinc","nickel","aluminum","titanium","tungsten","cobalt","chromium","manganese","silicon",
+"carbon","diamond","ruby","sapphire","emerald","jade","amber","pearl","ivory","marble","slate","chalk","slag","cement","concrete","plaster",
+"mortar","brick","tile","ceramic","porcelain","crystal","quartz","feldspar","mica","talc","graphite","charcoal","coal","petroleum","wax","resin",
+"lacquer","enamel","glaze","varnish","rubber","latex","nylon","polyester","acrylic","fiberglass","plywood","veneer","laminate","cork","bamboo","hemp",
+"jute","sisal","flax","cotton","wool","linen","silk","satin","velvet","suede","leather","parchment","papyrus","paper","cardboard","foam",
+"gel","putty","epoxy","adhesive","pigment","dye","stain","oxide","alloy","composite","aggregate","calcium","bread","water","salt","feast",
+"poison","fruit","grain","wheat","barley","oat","rice","corn","bean","lentil","pea","onion","garlic","pepper","ginger","turmeric",
+"cinnamon","clove","nutmeg","vanilla","honey","sugar","vinegar","olive","grape","apple","pear","plum","cherry","peach","melon","fig",
+"date","walnut","almond","hazel","butter","cheese","cream","milk","egg","flour","yeast","dough","broth","stew","building","wall",
+"floor","room","window","door","ceiling","roof","arch","column","beam","pillar","foundation","basement","attic","tower","dome","spire",
+"vault","buttress","corridor","hallway","staircase","balcony","terrace","porch","lintel","sill","jamb","alcove","niche","recess","foyer","lobby",
+"chamber","gallery","rotunda","pavilion","arcade","facade","parapet","turret","minaret","cupola","nave","apse","cloister","rampart","citadel","mother",
+"father","lover","friend","family","companion","sister","brother","daughter","son","husband","wife","partner","parent","child","infant","orphan",
+"widow","widower","ancestor","descendant","cousin","uncle","aunt","nephew","niece","grandparent","grandchild","sibling","twin","stranger","neighbor","rival",
+"enemy","ally","mentor","protector","guardian","patron","disciple","apprentice","master","servant","host","guest","comrade","colleague","peer","elder",
+"junior","bride","groom","betrothed","suitor","maiden","bachelor","matriarch","patriarch","kinsman","clansman","tribe","clan","lineage","dynasty","heritage",
+"bloodline","kindred","brethren","fellowship","brotherhood","sisterhood","bond","oath","pledge","vow","promise","troth","betrothal","covenant","pact","being",
+"existence","consciousness","death","freedom","morality","ethics","virtue","vice","soul","spirit","fate","destiny","will","purpose","identity","self",
+"other","subject","object","substance","form","matter","mind","body","nature","culture","history","progress","decadence","nihilism","absurdity","transcendence",
+"immanence","phenomenology","ontology","epistemology","aesthetics","hermeneutics","semiotics","dualism","monism","pluralism","determinism","empiricism","rationalism","idealism","materialism","pragmatism",
+"stoicism","hedonism","asceticism","relativism","universalism","particularism","reductionism","holism","fatalism","utilitarianism","deontology","teleology","cosmology","theology","eschatology","soteriology",
+"axiology","praxis","logos","ethos","song","note","voice","silence","echo","melody","chord","tone","pitch","beat","discord","resonance",
+"vibration","hum","chant","hymn","anthem","lullaby","ballad","aria","sonata","symphony","overture","prelude","fugue","cadence","crescendo","diminuendo",
+"staccato","legato","tremolo","glissando","arpeggio","octave","scale","timbre","register","soprano","alto","tenor","baritone","bass","drum","flute",
+"harp","bell","whistle","storm","thunder","frost","tide","lightning","hail","sleet","blizzard","tornado","hurricane","typhoon","cyclone","drought",
+"flood","fog","mist","haze","dew","icicle","snowflake","rainbow","aurora","monsoon","squall","gale","breeze","gust","zephyr","chinook",
+"sirocco","downpour","drizzle","deluge","tempest","whirlwind","waterspout","avalanche","mudslide","erosion","thaw","precipitation","humidity","barometer","thermometer","forecast",
+"climate","atmosphere","ozone","condensation","evaporation","prayer","worship","sacrifice","blessing","curse","rite","ritual","ceremony","sacrament","communion","baptism",
+"confession","penance","absolution","anointment","consecration","ordination","pilgrimage","procession","vigil","fasting","meditation","incantation","invocation","evocation","exorcism","divination",
+"augury","omen","prophecy","offering","libation","oblation","tithe","alms","hymnal","litany","psalm","sermon","homily","benediction","malediction","atonement",
+"redemption","salvation","damnation","sanctification","purification","initiation","revelation","work","tool","craft","skill","labor","anvil","hammer","chisel","saw",
+"drill","lathe","loom","spindle","kiln","furnace","bellows","tongs","pliers","wrench","screwdriver","awl","needle","thimble","bobbin","shuttle",
+"pestle","mallet","wedge","axe","adze","plane","rasp","file","grindstone","whetstone","crucible","mold","press","vise","cleat","jig",
+"gauge","level","plumb","compass","ruler","caliper","protractor","template","blueprint","circle","line","angle","shape","curve","sphere","triangle",
+"square","rectangle","pentagon","hexagon","octagon","polygon","ellipse","parabola","hyperbola","spiral","helix","cylinder","cone","cube","prism","pyramid",
+"tetrahedron","dodecahedron","vertex","edge","face","diagonal","tangent","secant","arc","sector","segment","bisector","perpendicular","parallel","intersection","midpoint",
+"centroid","circumference","diameter","perimeter","area","volume","surface","lattice","tessellation","wolf","deer","crow","spider","whale","serpent","hawk",
+"eagle","falcon","owl","raven","swan","crane","heron","pelican","albatross","sparrow","robin","wren","finch","fox","bear","lion",
+"tiger","leopard","panther","jaguar","lynx","badger","otter","beaver","rabbit","squirrel","mouse","rat","bat","mole","hedgehog","porcupine",
+"armadillo","turtle","tortoise","lizard","gecko","chameleon","iguana","salamander","newt","frog","toad","red","blue","cloth","thread","weave",
+"green","yellow","orange","purple","violet","indigo","crimson","scarlet","maroon","magenta","cyan","turquoise","teal","burgundy","lavender","mauve",
+"beige","tan","khaki","ochre","umber","sienna","vermilion","cerulean","azure","chartreuse","periwinkle","taupe","ecru","damask","brocade","tweed",
+"denim","flannel","muslin","chiffon","organza","taffeta","tulle","burlap","canvas","gingham","walk","run","fly","ride","journey","path",
+"road","trail","track","bridge","tunnel","ferry","harbor","port","dock","wharf","pier","quay","canal","aqueduct","wagon","chariot",
+"carriage","sled","cart","boat","ship","vessel","barge","canoe","kayak","raft","sail","oar","rudder","anchor","mast","keel",
+"hull","bow","stern","helm","tiller","lantern","beacon","lighthouse","waypoint","milestone","crossroad","house","bed","table","chair","kitchen",
+"garden","hearth","stove","oven","kettle","pot","pan","plate","bowl","cup","spoon","fork","knife","lamp","candle","blanket",
+"pillow","mattress","curtain","rug","carpet","shelf","cupboard","drawer","closet","bucket","broom","mop","basket","crate","barrel","jug",
+"pitcher","vase","mirror","clock","frame","mantle","chimney","fireplace","pantry","cellar","shed","fence","gate","speak","write","read",
+"listen","language","letter","signal","gesture","sign","cipher","code","message","telegram","dispatch","bulletin","broadcast","announcement","declaration","proclamation",
+"pamphlet","whisper","shout","murmur","stammer","stutter","babble","chatter","gossip","rumor","hearsay","dialogue","monologue","discourse","debate","lecture",
+"speech","address","oration","rhetoric","eloquence","alphabet","syllable","grammar","syntax","idiom","dialect","vernacular","jargon","slang","proverb","disease",
+"cure","doctor","medicine","heal","wound","fever","plague","infection","epidemic","pandemic","contagion","symptom","diagnosis","prognosis","treatment","therapy",
+"surgery","amputation","transfusion","vaccine","antidote","serum","toxin","pathogen","virus","bacteria","parasite","fungal","lesion","fracture","sprain","bruise",
+"blister","scar","scab","suture","bandage","splint","tourniquet","stethoscope","scalpel","syringe","forceps","catheter","antiseptic","anesthetic","analgesic","antibiotic",
+"remedy","star","planet","galaxy","universe","comet","nebula","asteroid","meteor","eclipse","equator","constellation","supernova","pulsar","quasar","horizon",
+"corona","singularity","parallax","zenith","nadir","aphelion","perihelion","apogee","perigee","trajectory","celestial","terrestrial","lunar","solar","stellar","interstellar",
+"cosmic","galactic","graviton","photon","neutron","proton","electron","quark","antimatter","plasma","ether","abyss","parsec","firmament","hemisphere","meridian",
+"latitude","longitude","order","rule","system","control","process","protocol","procedure","policy","directive","guideline","standard","compliance","audit","inspection",
+"review","report","memorandum","dossier","archive","ledger","census","survey","quota","benchmark","metric","index","inventory","catalog","database","permit",
+"license","warrant","certificate","credential","clearance","authorization","verification","validation","authentication","hierarchy","bureaucrat","administrator","official","clerk","registrar","inspector",
+"auditor","notary","comptroller","god","demon","myth","legend","oracle","dragon","phoenix","griffin","unicorn","centaur","minotaur","siren","nymph",
+"satyr","titan","giant","dwarf","goblin","troll","ogre","specter","phantom","wraith","banshee","ghoul","vampire","werewolf","shapeshifter","changeling",
+"familiar","talisman","amulet","relic","totem","fetish","grimoire","sigil","rune","glyph","pentacle","labyrinth","underworld","elysium","valhalla","olympus",
+"avalon","limbo","camelot","utopia","dystopia","book","page","word","story","text","chapter","paragraph","phrase","clause","verse","stanza",
+"canto","couplet","sonnet","ode","epic","saga","fable","parable","novel","novella","memoir","essay","treatise","manuscript","codex","scroll",
+"folio","tome","prologue","epilogue","appendix","glossary","addendum","preface","foreword","afterword","annotation","footnote","margin","colophon","inscription","epigraph",
+"epitaph","subtitle","headline","caption","blurb","excerpt","ego","trauma","shadow","instinct","psyche","persona","complex","neurosis","psychosis","repression",
+"suppression","projection","sublimation","fixation","obsession","compulsion","phobia","mania","paranoia","delusion","hallucination","dissociation","regression","transference","catharsis","cognition",
+"sensation","stimulus","response","conditioning","habituation","reinforcement","motivation","inhibition","impulse","reflex","appetite","aversion","attachment","detachment","denial","displacement",
+"rationalization","intellectualization","compartmentalization","identification","introjection","individuation","spark","fragment","legacy","remnant","vestige","artifact","fossil","ruin","debris","residue",
+"trace","imprint","impression","footprint","fingerprint","watermark","hallmark","landmark","waymark","signpost","marker","token","emblem","insignia","badge","crest",
+"shield","banner","pennant","flag","ensign","motto","maxim","adage","axiom","theorem","postulate","corollary","lemma","conjecture","proposition","thesis",
+"antithesis","dichotomy","dilemma","quandary","conundrum","impasse","stalemate","deadlock","gridlock","bottleneck","logjam","standstill","hiatus","interlude","intermission","respite",
+"reprieve","moratorium","armistice","ceasefire","detente","rapprochement","reconciliation","mediation","arbitration","negotiation","concession","compromise","consensus","accord","compact","agreement",
+"indenture","deed","title","tenure","lease","easement","lien","mortgage","collateral","equity","dividend","interest","premium","surcharge","levy","toll",
+"duty","tribute","ransom","bounty","reward","prize","trophy","medal","ribbon","laurel","garland","wreath","crown","scepter","throne","dais",
+"podium","rostrum","pulpit","lectern","stage","arena","coliseum","amphitheater","stadium","forum","agora","bazaar","souk","emporium","marketplace","warehouse",
+"depot","granary","silo","cistern","reservoir","dam","levee","dike","spillway","floodgate","sluice","weir","culvert","conduit","pipeline","duct",
+"channel","groove","furrow","trench","moat","ditch","gutter","drain","sewer","manhole","grate","grille","trellis","pergola","arbor","gazebo",
+"kiosk","booth","stall","counter","ledge","pedestal","plinth","obelisk","monolith","megalith","dolmen","cairn","barrow","tumulus","mausoleum","cenotaph",
+"crypt","catacomb","ossuary","reliquary","sanctuary","shrine","chapel","cathedral","basilica","monastery","ember","cinder","ash","soot","smoke","flame",
+"blaze","inferno","pyre","bonfire","torch","taper","wick","filament","glow","shimmer","glimmer","flicker","gleam","glint","lustre","sheen"
 ];
 
-const NWORDS = WORDS.length;
+let NWORDS = WORDS.length;
+const VOCAB_LENS = [];
+
+const SUFFIXES = ['ing','tion','sion','ment','ness','able','ible','ful','less','ous','ive','ity','ary','ery','ory','al','ly','er','ed','es','en','s'];
+
+function tryStem(word) {
+  for (const suf of SUFFIXES) {
+    if (word.length > suf.length + 2 && word.endsWith(suf)) {
+      const stem = word.slice(0, -suf.length);
+      const idx = WORDS.indexOf(stem);
+      if (idx >= 0) return idx;
+    }
+  }
+  return -1;
+}
+
+function greedyVocabMatch(word) {
+  const wlen = word.length;
+  const ids = [];
+  let pos = 0;
+  while (pos < wlen && ids.length < 8) {
+    let best = -1, bestLen = 0;
+    for (let v = 0; v < WORDS.length; v++) {
+      const vl = VOCAB_LENS[v];
+      if (vl <= bestLen || vl > wlen - pos) continue;
+      if (word.startsWith(WORDS[v], pos)) {
+        best = v;
+        bestLen = vl;
+      }
+    }
+    if (best >= 0 && bestLen >= 3) {
+      ids.push(best);
+      pos += bestLen;
+    } else {
+      pos++;
+    }
+  }
+  return ids;
+}
 
 // ═══ CALENDAR DRIFT (exact from ariannamethod.c) ═══
 const AM_ANNUAL_DRIFT = 11.25;
@@ -458,8 +499,8 @@ function updateChambers(stepIdx) {
 // ═══ DUAL WEIGHT MATRICES ═══
 // Matrix A and Matrix B — word association weights
 // Blended by calendar drift + prophecy debt
-const embedA = new Float32Array(NWORDS * DIM);
-const embedB = new Float32Array(NWORDS * DIM);
+let embedA = new Float32Array(NWORDS * DIM);
+let embedB = new Float32Array(NWORDS * DIM);
 // Step weights: RRPRAM-style Wr per step
 const stepWrA = [];
 const stepWrB = [];
@@ -475,10 +516,16 @@ const stepDownB = [];
 // Initialize
 function initWeights() {
   const scale = Math.sqrt(2 / DIM) * 0.02;
+  embedA = new Float32Array(NWORDS * DIM);
+  embedB = new Float32Array(NWORDS * DIM);
   for (let i = 0; i < NWORDS * DIM; i++) {
     embedA[i] = (Math.random() - 0.5) * scale;
     embedB[i] = (Math.random() - 0.5) * scale;
   }
+  stepWrA.length = 0; stepWrB.length = 0;
+  stepRmsA.length = 0; stepRmsB.length = 0;
+  stepGateA.length = 0; stepUpA.length = 0; stepDownA.length = 0;
+  stepGateB.length = 0; stepUpB.length = 0; stepDownB.length = 0;
   for (let s = 0; s < STEPS; s++) {
     stepWrA.push(new Float32Array(DIM * DIM));
     stepWrB.push(new Float32Array(DIM * DIM));
@@ -506,7 +553,29 @@ function initWeights() {
     }
   }
 }
-initWeights();
+// ═══ ASYNC VOCABULARY LOADING ═══
+async function loadVocabulary() {
+  try {
+    const resp = await fetch('nanojanus.txt');
+    if (!resp.ok) throw new Error('fetch failed');
+    const text = await resp.text();
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length >= 100) {
+      WORDS.length = 0;
+      for (const l of lines) WORDS.push(l);
+    }
+  } catch(e) {
+    console.log('[nanojanus] using inline vocabulary (' + WORDS.length + ' words)');
+  }
+  // Precompute lengths
+  VOCAB_LENS.length = 0;
+  for (const w of WORDS) VOCAB_LENS.push(w.length);
+  NWORDS = WORDS.length;
+  // Reinitialize weights for new vocab size
+  initWeights();
+  updateMetrics();
+}
+loadVocabulary();
 
 // Blend weights by calendar state
 function getBlendAlpha() {
@@ -545,21 +614,20 @@ function getBigram(prev, next) {
   return bigrams.get(prev + ',' + next) || 0;
 }
 
-// ═══ TOKENIZER (word-level with BPE-like matching) ═══
+// ═══ TOKENIZER (3-stage: exact → stem → greedy BPE decomposition) ═══
 function tokenizeText(text) {
-  const words = text.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/);
+  const words = text.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => w.length > 0);
   const ids = [];
   for (const w of words) {
+    // Stage 1: exact match
     const idx = WORDS.indexOf(w);
-    if (idx >= 0) ids.push(idx);
-    else {
-      // Stem matching
-      for (let len = w.length - 1; len >= 3; len--) {
-        const stem = w.substring(0, len);
-        const si = WORDS.indexOf(stem);
-        if (si >= 0) { ids.push(si); break; }
-      }
-    }
+    if (idx >= 0) { ids.push(idx); continue; }
+    // Stage 2: stem matching
+    const stemIdx = tryStem(w);
+    if (stemIdx >= 0) { ids.push(stemIdx); continue; }
+    // Stage 3: greedy longest-match BPE decomposition
+    const sub = greedyVocabMatch(w);
+    for (const s of sub) ids.push(s);
   }
   return ids;
 }
