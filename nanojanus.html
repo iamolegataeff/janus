@@ -886,6 +886,7 @@ async function runChain(userText) {
   updateMetrics();
 
   const forbidden = new Set();
+  forbidden.add(seedIdx);
   const allSteps = [];
 
   // Show origin FIRST — everything grows outward from here

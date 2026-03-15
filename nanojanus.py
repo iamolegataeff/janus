@@ -629,6 +629,7 @@ def run_chain(user_text):
     n_forward = STEPS - n_backward
 
     forbidden = set()
+    forbidden.add(seed_idx)
     all_steps = []
 
     # Two independent contexts growing simultaneously
