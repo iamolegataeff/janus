@@ -29,8 +29,8 @@ import time
 # CONSTANTS
 # ===================================================================
 STEPS = 12
-DIM = 64
-HDIM = 128
+DIM = 384
+HDIM = 768
 BPE_VOCAB = 2048
 BPE_MERGES = 1792
 

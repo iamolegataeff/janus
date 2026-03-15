@@ -283,8 +283,9 @@ Demonstration of the novel Janus self-resonance attention mechanism in isolation
 Also features enhanced MetaJanus with internal prophecy: predicts expected entropy before each generation and evaluates accuracy afterward.
 
 ```
+Architecture: T=256, E=384, H=6, D=64, B=6, M=1024
 Attention:    Janus only (echo through own weights)
-Parameters:   ~6.8M × 2 matrices
+Parameters:   ~10.03M × 2 matrices = ~20.06M total
 Output:       char-level
 ```
 
@@ -299,7 +300,7 @@ Web-based NanoJanus, styled after [Penelope](https://github.com/ariannamethod/19
 
 Features:
 - Real BPE tokenizer: 2048 subword vocab, 1792 byte-pair merges (identical to penelope.c)
-- Dual embeddings: `embed_in[2048×64]` (BPE input) + `embed_out[1984×64]` (word output), no weight tying
+- Dual embeddings: `embed_in[2048×384]` (BPE input) + `embed_out[1984×384]` (word output), no weight tying
 - RRPRAM forward in generation: `pool_context → Wr → RMSNorm → SwiGLU → logits`
 - Dario equation overlay on top of learned logits (Hebbian, Prophecy, Destiny)
 - Dual weight matrices (A + B) blended by calendar drift + prophecy debt
@@ -308,7 +309,7 @@ Features:
 - In-browser training with Chuck optimizer modulation (2000 steps)
 - Calendar Drift, MetaJanus birth snapshot, Kuramoto chambers (6 oscillators)
 - 12 bi-directional reasoning steps with "charged word" origin selection
-- ~1.2M params per matrix (~2.4M dual)
+- ~13.9M params per matrix (~27.9M dual) — matching penelope.c dimensions (DIM=384, HDIM=768)
 
 Open `nanojanus.html` in any modern browser. No server needed for the inline fallback; serve with any HTTP server for nanojanus.txt loading.
 

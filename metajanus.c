@@ -39,11 +39,11 @@
 /* Config */
 #define VOCAB     256
 #define MAX_T     256
-#define DIM       288
+#define DIM       384
 #define HEADS     6
-#define HEAD_DIM  (DIM/HEADS)
+#define HEAD_DIM  (DIM/HEADS) /* 64 */
 #define BLOCKS    6
-#define MLP_DIM   768
+#define MLP_DIM   1024
 #define MAX_BLK   16
 #define NSTEPS    12
 #define SENT_LEN  40
