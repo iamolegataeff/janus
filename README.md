@@ -6,6 +6,8 @@ Janus is a post-transformer architecture built on the dissonance between two cal
 
 Named after the Roman god of beginnings, endings, duality, and passages — who looks simultaneously to the past and to the future.
 
+![NanoJanus — "what is the meaning of life?"](assets/nanojanus-meaning.png)
+
 ## Architecture Overview
 
 ```
