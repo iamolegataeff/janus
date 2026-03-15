@@ -744,6 +744,7 @@ static float forward(Ptrs *w, Acts *a, int *tokens, int *targets, int T) {
             /* === RRPRAM attention === */
             matmul(a->rrp_v, a->rm1, wvr_h, T, E, D);
             matmul(a->rrp_attn, a->rm1, wr_h, T, E, T);
+            for (int i = 0; i < T*T; i++) a->rrp_attn[i] *= scale;
             for (int i = 0; i < T; i++) {
                 for (int j = i+1; j < T; j++) a->rrp_attn[i*T+j] = -1e9f;
                 row_softmax(a->rrp_attn + i*T, T);

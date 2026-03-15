@@ -386,6 +386,7 @@ static float forward(Ptrs*w,Acts*a,int*tok,int*tgt,int T){
             matmul(a->ho,a->at,a->v,T,T,HEAD_DIM);
             matmul(a->rv,a->rm1,w->wvr[b]+h*DIM*HEAD_DIM,T,DIM,HEAD_DIM);
             matmul(a->ra,a->rm1,w->wr[b]+h*DIM*MAX_T,T,DIM,T);
+            for(int i=0;i<T*T;i++)a->ra[i]*=sc;
             for(int i=0;i<T;i++){for(int j=i+1;j<T;j++)a->ra[i*T+j]=-1e9f;row_softmax(a->ra+i*T,T);}
             matmul(a->ro,a->ra,a->rv,T,T,HEAD_DIM);
             if(h==0) janus_attention(a->rm1,w->wj[b],a->je,a->ja,T);

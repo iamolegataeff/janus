@@ -629,6 +629,7 @@ static float forward_pass(Ptrs *w, Acts *a, int *tokens, int *targets,
 
             matmul(a->rrp_v, a->rm1, wvr_h, T, DIM, HEAD_DIM);
             matmul(a->rrp_attn, a->rm1, wr_h, T, DIM, T);
+            for (int i = 0; i < T*T; i++) a->rrp_attn[i] *= scale;
             for (int i = 0; i < T; i++) {
                 for (int j = i+1; j < T; j++) a->rrp_attn[i*T+j] = -1e9f;
                 row_softmax(a->rrp_attn+i*T, T);
