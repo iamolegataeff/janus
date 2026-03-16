@@ -296,41 +296,38 @@ cc metajanus.c -O2 -lm -o metajanus
 ```
 
 ### `nanojanus.html` — Browser Version
-Web-based NanoJanus, styled after [Penelope](https://github.com/ariannamethod/1984). Dual tokenizer architecture matching penelope.c: real BPE input (2048 vocab, 1792 merges from penelope.c) with word-level output (1984 vocab). Dark theme with color-coded bi-directional steps (orange ↑ backward, blue ↓ forward, gold ● origin).
+Web-based NanoJanus, styled after [Penelope](https://github.com/ariannamethod/1984). Resonance engine with dual tokenizer: BPE input (2048 subwords), word-level output (1984 curated words). Dark theme with color-coded bi-directional steps (orange ↑ backward, blue ↓ forward, gold ● origin).
 
 Features:
-- Real BPE tokenizer: 2048 subword vocab, 1792 byte-pair merges (identical to penelope.c)
-- Dual embeddings: `embed_in[2048×384]` (BPE input) + `embed_out[1984×384]` (word output), no weight tying
-- RRPRAM forward in generation: `pool_context → Wr → RMSNorm → SwiGLU → logits`
-- Dario equation overlay on top of learned logits (Hebbian, Prophecy, Destiny)
-- Dual weight matrices (A + B) blended by calendar drift + prophecy debt
-- 1984-word vocabulary loaded from `nanojanus.txt` (async fetch, falls back to inline array)
-- Precomputed BPE encoding for each vocab word (for context accumulation during generation)
-- In-browser training with Chuck optimizer modulation (2000 steps)
-- Calendar Drift, MetaJanus birth snapshot, Kuramoto chambers (6 oscillators)
-- 12 bi-directional reasoning steps with "charged word" origin selection
-- ~13.9M params per matrix (~27.9M dual) — matching penelope.c dimensions (DIM=384, HDIM=768)
+- **Resonance engine:** 8 sequential layers, 7-head attention with RoPE, RRPRAM resonance (gated blend), SwiGLU FFN
+- **19.6M parameters** (DIM=448, HDIM=896, N_HEADS=7, HEAD_DIM=64, N_LAYERS=8, MAX_SEQ=256)
+- **Dual tokenizer:** BPE input (2048 vocab, 1792 merges), word-level output — the soul thinks in subwords, the mouth speaks real words
+- **Trained weights:** `weights/nanojanus.bin` (PEN7 format, 78.5MB) — loss 1.97 on 85MB Gutenberg
+- Extended vocab: ~2800 words (1984 hardcoded + BPE-decoded whole words, stop/suffix filtered)
+- Dario equation overlay (Hebbian, Prophecy, Destiny, 6 Kuramoto chambers)
+- PEN7 binary weight loading via "LOAD WEIGHTS" button
+- Calendar Drift, MetaJanus birth snapshot, 12 bi-directional reasoning steps
+- 1984-word vocabulary loaded from `nanojanus.txt` (falls back to inline array for file:// usage)
 
-Open `nanojanus.html` in any modern browser. No server needed for the inline fallback; serve with any HTTP server for nanojanus.txt loading.
+Open `nanojanus.html` in any modern browser. No server needed.
 
 ### `nanojanus.py` — Python CLI Version
-Python port matching nanojanus.html's architecture exactly. CLI-based with `--generate` and `--train` modes.
+Python port matching nanojanus.html's Resonance engine exactly. CLI-based with `--generate` and `--train` modes.
 
 ```bash
 python3 nanojanus.py --generate "the darkness of void"
-python3 nanojanus.py --train shakespeare.txt --steps 2000
+python3 nanojanus.py --weights weights/nanojanus.bin --generate "consciousness"
+python3 nanojanus.py --train corpus.txt --steps 25000
 ```
 
 Features:
-- Real BPE tokenizer: 2048 subword vocab, 1792 byte-pair merges (identical to penelope.c and nanojanus.html)
-- Dual embeddings: `embed_in[2048×64]` (BPE) + `embed_out[1984×64]` (word), no weight tying
-- RRPRAM forward: `pool_context → Wr → RMSNorm → SwiGLU → logits`
-- Dario equation overlay on learned logits
+- **Same Resonance engine:** 8 layers, RoPE, 7-head attention + RRPRAM gate + SwiGLU, 19.6M params
+- **Training:** BPE next-token prediction with AdamW, cosine LR schedule
+- **PEN7 format** weight save/load — binary compatible with nanojanus.html and penelope.c
 - Simultaneous bidirectional generation (interleaved forward + backward)
-- All AML physics, Calendar Drift, MetaJanus, Kuramoto chambers, dual matrices
-- Training with Chuck optimizer (macro patience, stagnation noise)
-- Save/load weights via pickle (`nanojanus.weights.pkl`)
-- BPE encoding verified identical to HTML version
+- Dario equation overlay, Calendar Drift, MetaJanus, Kuramoto chambers
+- Extended vocab with stop word and suffix filtering
+- Pure Python inference (no PyTorch dependency for generation)
 
 ### `nanojanus.txt` — Vocabulary File
 1984 words organized in 29 semantic categories (body, nature, emotion, time, society, abstract, action, material, food, architecture, relationship, philosophy, music, weather, ritual, labor, geometry, animal, textile, transport, domestic, communication, medical, cosmic, bureaucracy, mythic, textual, psychological, final stratum). One word per line.
