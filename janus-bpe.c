@@ -25,16 +25,16 @@
  * CONFIGURATION
  * ═══════════════════════════════════════════════════════════════════ */
 
-#define BPE_VOCAB   512
+#define BPE_VOCAB   2048
 #define MAX_T       256
-#define DIM         300
-#define HEADS       6
-#define HEAD_DIM    (DIM/HEADS) /* 50 */
-#define BLOCKS      6
-#define MLP_DIM     800
+#define DIM         384       /* depth=12 * 32 */
+#define HEADS       4
+#define HEAD_DIM    (DIM/HEADS) /* 96 */
+#define BLOCKS      12
+#define MLP_DIM     768       /* E*2 */
 #define MAX_BLK     16
 #define NSTEPS      12
-#define MAX_MERGES  256
+#define MAX_MERGES  1792      /* BPE_VOCAB - 256 */
 
 /* ═══════════════════════════════════════════════════════════════════
  * CALENDAR DRIFT — exact port from ariannamethod.c

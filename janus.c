@@ -47,11 +47,11 @@
 
 #define VOCAB     256       /* char-level */
 #define MAX_T     256       /* context length */
-#define DIM       288       /* embedding dimension */
-#define HEADS     6         /* attention heads */
-#define HEAD_DIM  (DIM/HEADS) /* 48 */
-#define BLOCKS    6         /* transformer blocks */
-#define MLP_DIM   768       /* SwiGLU hidden dim */
+#define DIM       384       /* embedding dimension (depth=12 * 32) */
+#define HEADS     4         /* attention heads */
+#define HEAD_DIM  (DIM/HEADS) /* 96 */
+#define BLOCKS    12        /* transformer blocks */
+#define MLP_DIM   768       /* SwiGLU hidden dim (E*2) */
 #define MAX_BLK   16
 #define NSTEPS    12        /* associative reasoning steps */
 #define SENT_LEN  40        /* max chars per sentence in reasoning */
