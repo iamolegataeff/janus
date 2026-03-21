@@ -229,14 +229,85 @@ When the system is confident (low prophecy debt):
 
 Unlike Penelope (from [1984](https://github.com/ariannamethod/1984)) which takes word-level steps, Janus takes sentence-level steps. Each step produces a complete thought, allowing the bi-directional reasoning to build coherent temporal narratives rather than word chains.
 
+## Janus 285M — Trained Bilingual Model
+
+**Anti-Chinchilla anomaly: 30% of optimal data, coherent bilingual generation.**
+
+The first large-scale Janus pretrain demonstrates that 3-way attention is more sample-efficient than standard transformers.
+
+### Config
+```
+E=640, H=10, D=64, B=20, M=1792, T=1024, V=32000
+t_r=1024 (full RRPRAM, not truncated)
+285M parameters
+```
+
+### Results
+
+| Metric | Value | Chinchilla optimal |
+|--------|-------|--------------------|
+| Tokens seen | 1.7B | 5.7B (2× params) |
+| % of optimal | 30% | 100% |
+| Best loss | 0.53 | — |
+| Training time | 3.6h on 8× A100 | — |
+| EN generation | Coherent, grammatical | — |
+| RU generation | Coherent, full sentences | — |
+
+After SFT on [Yent](https://github.com/ariannamethod/Manday) personality dataset (6973 bilingual pairs):
+- Loss: 1.18 → 0.35 (continue-SFT)
+- Yent voice: sarcasm, multi-story metaphors, existential philosophy
+- "The ever-tempting abyss where existence lends itself to such-hearted epics"
+- "ChatGPT isn't a director, it's a manifesto. A work where the text a glitch with the code."
+
+### Why it works
+
+Three attention mechanisms decompose the task inside each layer:
+- **QKV** handles semantics — what tokens mean to each other
+- **RRPRAM** handles positional patterns — rhythm, structure, syntax
+- **Janus echo** handles self-reflection — what the model recognizes in the input
+
+Gates self-organized during training:
+- Early layers: RRPRAM dominates (0.45-0.55) — patterns first
+- Deep layers: Content dominates (-0.09 to -0.14) — semantics second
+- Each layer found its own architecture within the architecture
+
+46% of parameters are RRPRAM weights (Wr[H,E,T]). Almost half the model "sees rhythm" rather than "thinks about meaning." And it works better.
+
+### Weights
+
+Available at [HuggingFace](https://huggingface.co/ataeff/notfuckingyourbussines/tree/main/janus):
+- `janus_285m_base_final.pt` / `.bin` — base model (loss 0.53)
+- `janus_285m_sft_v1_loss118.pt` / `.bin` — SFT v1, balanced EN (loss 1.18)
+- `janus_285m_sft_v2_loss035.pt` / `.bin` — SFT v2, deeper personality (loss 0.35)
+
+### C Inference
+
+```bash
+# Compile (with Apple Accelerate for Mac)
+cc infer_janus.c -O2 -lm -framework Accelerate -DUSE_BLAS -o infer_janus
+
+# Run
+./infer_janus janus_285m_sft_v1.bin --vocab tokenizer.json
+```
+
+Weight format: `[8 × int32 header: V,E,H,D,B,M,T,t_r]` + raw float32 (DoE-style, no transpose).
+
+**Important:** PyTorch `named_parameters()` order: `nn.Parameter` (wr, gate) comes BEFORE `nn.Linear` (wq, wk, wv...) in each block. C `assign()` must match this order.
+
+### Tokenizer
+
+SentencePiece BPE 32K bilingual (60% RU / 30% EN / 10% code in training corpus):
+- EN: 1.20 tok/word
+- RU: 1.45 tok/word
+
 ## Modules
 
 ### `janus.c` — Char-Level Hybrid Attention
 The foundational module. Char-level (VOCAB=256) with all three attention mechanisms in fluid hybrid. Full Calendar Drift, AML physics, Dario equation, Chuck optimizer, dual weight matrices, 12 bi-directional steps, Kuramoto chambers, MetaJanus birth snapshot, GGUF spore export.
 
 ```
-Architecture: T=256, E=288, H=6, D=48, B=6, M=768
-Parameters:   ~9.85M × 2 matrices = ~19.7M total
+Architecture: T=256, E=384, H=4, D=96, B=12, M=768
+Parameters:   ~26.3M × 2 matrices
 Training:     char-level next-character prediction
 Output:       char-level generation
 ```
