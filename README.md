@@ -339,7 +339,7 @@ Weight format: `[8 × int32 header: V,E,H,D,B,M,T,t_r]` + raw float32 (DoE-style
 
 ### Tokenizer
 
-SentencePiece BPE 32K bilingual (60% RU / 30% EN / 10% code in training corpus):
+SentencePiece BPE 32K bilingual:
 - EN: 1.20 tok/word
 - RU: 1.45 tok/word
 
