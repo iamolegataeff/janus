@@ -261,7 +261,7 @@ The first large-scale Janus pretrain demonstrates that 3-way attention is more s
 
 ### Config
 ```
-E=640, H=10, D=64, B=20, M=1792, T=1024, V=32000
+E=640, H=10, D=64, B=20, M=1664, T=1024, V=32000
 t_r=1024 (full RRPRAM, not truncated)
 285M parameters
 ```
