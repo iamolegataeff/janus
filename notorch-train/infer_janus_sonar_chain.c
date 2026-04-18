@@ -32,6 +32,127 @@
 #define SENT_MIN_LEN   18      /* no early cutoff before this length */
 #define CAND_N         3       /* best-of-N candidates per step */
 
+/* ── AML physics state (field) ── */
+/* Port of core/ariannamethod.c logit transformations: destiny, suffering,
+   laws (entropy floor + resonance ceiling), prophecy debt accumulation.
+   All six Kuramoto chambers modulate force coefficients in real time. */
+typedef struct {
+    float destiny_bias;        /* [0,1] — max-suppression strength */
+    float pain;                /* [0,1] — compresses toward mean */
+    float entropy_floor;       /* [0,1] — cap on max-vs-second gap */
+    float resonance_ceiling;   /* [0,1] — additional gap cap */
+    float prophecy_debt;       /* accumulated: (max-chosen)/(+1) per step */
+    float debt_decay;          /* per-step multiplier on debt */
+    /* Chambers: Kuramoto 6-oscillator ring */
+    float ch_act[6];
+    float ch_decay[6];
+    float ch_coup[6][6];
+} AMLField;
+
+enum { CH_FEAR=0, CH_LOVE, CH_RAGE, CH_VOID, CH_FLOW, CH_CMPLX };
+
+static void aml_init(AMLField* f) {
+    memset(f, 0, sizeof(*f));
+    f->destiny_bias     = 0.35f;
+    f->pain             = 0.0f;
+    f->entropy_floor    = 0.10f;
+    f->resonance_ceiling= 0.95f;
+    f->prophecy_debt    = 0.0f;
+    f->debt_decay       = 0.998f;
+    /* Chamber initial activations (LOVE + FLOW slight bias — ready posture) */
+    f->ch_act[CH_LOVE] = 0.2f; f->ch_act[CH_FLOW] = 0.15f;
+    static const float decay[6] = {0.90f, 0.93f, 0.85f, 0.97f, 0.88f, 0.94f};
+    memcpy(f->ch_decay, decay, sizeof(decay));
+    /* Coupling matrix (antisymmetric-ish) from core/ariannamethod.c */
+    static const float coup[6][6] = {
+        { 0.00f,-0.30f, 0.50f, 0.40f,-0.20f, 0.10f},
+        {-0.30f, 0.00f,-0.40f,-0.50f, 0.50f, 0.20f},
+        { 0.50f,-0.30f, 0.00f, 0.20f,-0.30f, 0.30f},
+        { 0.40f,-0.50f, 0.30f, 0.00f,-0.30f, 0.40f},
+        {-0.20f, 0.40f,-0.20f,-0.30f, 0.00f, 0.30f},
+        { 0.10f, 0.20f, 0.30f, 0.40f, 0.30f, 0.00f}
+    };
+    memcpy(f->ch_coup, coup, sizeof(coup));
+}
+
+/* Kuramoto crossfire step: act[i] += K·sum_j(coup[i][j]·sin(act[j]-act[i])), then decay */
+static void aml_chambers_xfire(AMLField* f, int iters) {
+    for (int t = 0; t < iters; t++) {
+        float old[6]; memcpy(old, f->ch_act, sizeof(old));
+        for (int i = 0; i < 6; i++) {
+            f->ch_act[i] *= f->ch_decay[i];
+            for (int j = 0; j < 6; j++)
+                if (i != j) f->ch_act[i] += 0.03f * f->ch_coup[i][j] * sinf(old[j] - old[i]);
+            if (f->ch_act[i] < 0) f->ch_act[i] = 0;
+            if (f->ch_act[i] > 1) f->ch_act[i] = 1;
+        }
+    }
+}
+
+/* Destiny: suppress below-max logits by (max - logits[i]) * bias * 0.5
+   Result: distribution becomes more peaked around the current dominant token. */
+static void aml_apply_destiny(float* logits, int n, float bias) {
+    if (n <= 0 || bias < 0.001f) return;
+    float mx = logits[0]; for (int i = 1; i < n; i++) if (logits[i] > mx) mx = logits[i];
+    for (int i = 0; i < n; i++) logits[i] -= (mx - logits[i]) * bias * 0.5f;
+}
+
+/* Suffering: pain compresses logits toward mean (blunts both peaks and valleys) */
+static void aml_apply_suffering(float* logits, int n, float pain) {
+    if (n <= 0 || pain < 0.01f) return;
+    float mean = 0; for (int i = 0; i < n; i++) mean += logits[i]; mean /= (float)n;
+    float factor = 1.0f - 0.5f * pain;
+    for (int i = 0; i < n; i++) logits[i] = mean + (logits[i] - mean) * factor;
+}
+
+/* Laws: entropy floor + resonance ceiling — cap on max-vs-second gap */
+static void aml_apply_laws(float* logits, int n, float ent_floor, float res_ceil) {
+    if (n <= 0) return;
+    float mx = logits[0], sec = -1e30f;
+    for (int i = 1; i < n; i++) {
+        if (logits[i] > mx) { sec = mx; mx = logits[i]; }
+        else if (logits[i] > sec) sec = logits[i];
+    }
+    float gap = mx - sec;
+    if (gap > 0 && ent_floor > 0) {
+        float max_gap = (1.0f - ent_floor) * 10.0f;
+        if (gap > max_gap) {
+            float reduce = (gap - max_gap) * 0.5f;
+            for (int i = 0; i < n; i++) if (logits[i] == mx) logits[i] -= reduce;
+        }
+    }
+    if (res_ceil < 1.0f) {
+        float ceiling_gap = res_ceil * 10.0f;
+        float new_gap = mx - sec;
+        if (new_gap > ceiling_gap) {
+            float reduce = (new_gap - ceiling_gap) * 0.3f;
+            for (int i = 0; i < n; i++) if (logits[i] >= mx - 0.001f) logits[i] -= reduce;
+        }
+    }
+}
+
+/* Prophecy debt contribution of a choice: (max - chosen) / (diff + 1) */
+static float aml_prophecy_debt(const float* logits, int chosen, int n) {
+    if (n <= 0 || chosen < 0 || chosen >= n) return 0;
+    float mx = logits[0]; for (int i = 1; i < n; i++) if (logits[i] > mx) mx = logits[i];
+    float diff = mx - logits[chosen];
+    return diff > 0 ? diff / (diff + 1.0f) : 0;
+}
+
+/* Apply full field pipeline + update prophecy debt after choice.
+   Chamber modulation: destiny bias amplified by VOID, suppressed by FEAR.
+                       pain amplified by RAGE.
+                       Laws always on. */
+static void aml_apply_field(float* logits, int n, const AMLField* f) {
+    float dest = f->destiny_bias * (1.0f + 0.6f*f->ch_act[CH_VOID] - 0.3f*f->ch_act[CH_FEAR]);
+    float pain = f->pain + 0.5f*f->ch_act[CH_RAGE];
+    if (dest < 0) dest = 0; if (dest > 1) dest = 1;
+    if (pain < 0) pain = 0; if (pain > 1) pain = 1;
+    aml_apply_destiny(logits, n, dest);
+    aml_apply_suffering(logits, n, pain);
+    aml_apply_laws(logits, n, f->entropy_floor, f->resonance_ceiling);
+}
+
 /* ── SPA (Sentence Phonon Attention) ── */
 #define SPA_DIM   32
 
@@ -49,7 +170,9 @@ typedef struct {
     nt_tensor *head;
 } Model;
 
-static int model_n_tensors(void) { return 1 + NLAYERS * 30 + 2; }
+#define N_TENSORS_DUAL   (1 + NLAYERS * 30 + 2)   /* 9 duals × 3 + rms1 + rms2 + wr */
+#define N_TENSORS_SINGLE (1 + NLAYERS * 12 + 2)   /* 9 singles + rms1 + rms2 + wr */
+static int model_n_tensors(void) { return N_TENSORS_DUAL; }
 
 static nt_tensor** model_param_array(Model* m) {
     int n = model_n_tensors();
@@ -73,33 +196,71 @@ static nt_tensor** model_param_array(Model* m) {
     return p;
 }
 
+/* Wrap a single matrix as DualProj: A = W, B = zeros, α = +large (σ≈1).
+   Effective W_eff = W exactly — single model runs through dual code. */
+static void dual_from_single(DualProj* d, nt_tensor* W, int rows, int cols) {
+    d->a = W;                                   /* reuse W as A */
+    d->b = nt_tensor_new2d(rows, cols);         /* zeros */
+    d->alpha = nt_tensor_new(1);
+    d->alpha->data[0] = 20.0f;                   /* σ(20) ≈ 1.0 → pure A */
+}
+
 static Model* load_model(const char* path) {
     int n_loaded = 0;
     nt_tensor** loaded = nt_load(path, &n_loaded);
     if (!loaded) { printf("cannot load %s\n", path); return NULL; }
-    int expected = model_n_tensors();
-    if (n_loaded != expected) {
-        printf("tensor mismatch: got %d, expected %d\n", n_loaded, expected);
-        for (int i = 0; i < n_loaded; i++) nt_tensor_free(loaded[i]);
-        free(loaded); return NULL;
-    }
+
     Model* m = (Model*)calloc(1, sizeof(Model));
-    int i = 0;
-    m->wte = loaded[i++];
-    for (int l = 0; l < NLAYERS; l++) {
-        m->L[l].rms1 = loaded[i++];
-        DualProj* projs[] = { &m->L[l].wq, &m->L[l].wk, &m->L[l].wv,
-                              &m->L[l].wvr, &m->L[l].wj, &m->L[l].wo };
-        for (int k = 0; k < 6; k++) {
-            projs[k]->a = loaded[i++]; projs[k]->b = loaded[i++]; projs[k]->alpha = loaded[i++];
+
+    if (n_loaded == N_TENSORS_DUAL) {
+        /* Dual format — load directly */
+        printf("format: dual (%d tensors)\n", n_loaded);
+        int i = 0;
+        m->wte = loaded[i++];
+        for (int l = 0; l < NLAYERS; l++) {
+            m->L[l].rms1 = loaded[i++];
+            DualProj* projs[] = { &m->L[l].wq, &m->L[l].wk, &m->L[l].wv,
+                                  &m->L[l].wvr, &m->L[l].wj, &m->L[l].wo };
+            for (int k = 0; k < 6; k++) {
+                projs[k]->a = loaded[i++]; projs[k]->b = loaded[i++]; projs[k]->alpha = loaded[i++];
+            }
+            m->L[l].wr = loaded[i++]; m->L[l].rms2 = loaded[i++];
+            DualProj* ffn[] = { &m->L[l].w_gate, &m->L[l].w_up, &m->L[l].w_down };
+            for (int k = 0; k < 3; k++) {
+                ffn[k]->a = loaded[i++]; ffn[k]->b = loaded[i++]; ffn[k]->alpha = loaded[i++];
+            }
         }
-        m->L[l].wr = loaded[i++]; m->L[l].rms2 = loaded[i++];
-        DualProj* ffn[] = { &m->L[l].w_gate, &m->L[l].w_up, &m->L[l].w_down };
-        for (int k = 0; k < 3; k++) {
-            ffn[k]->a = loaded[i++]; ffn[k]->b = loaded[i++]; ffn[k]->alpha = loaded[i++];
+        m->rms_f = loaded[i++]; m->head = loaded[i++];
+    } else if (n_loaded == N_TENSORS_SINGLE) {
+        /* Single format — promote to dual with W_B=0, α=20 (σ≈1) */
+        printf("format: single (%d tensors) — loading via single→dual adapter\n", n_loaded);
+        int i = 0;
+        m->wte = loaded[i++];
+        for (int l = 0; l < NLAYERS; l++) {
+            m->L[l].rms1 = loaded[i++];
+            nt_tensor* wq  = loaded[i++]; nt_tensor* wk = loaded[i++]; nt_tensor* wv = loaded[i++];
+            nt_tensor* wvr = loaded[i++]; nt_tensor* wj = loaded[i++]; nt_tensor* wo = loaded[i++];
+            m->L[l].wr   = loaded[i++];
+            m->L[l].rms2 = loaded[i++];
+            nt_tensor* wg = loaded[i++]; nt_tensor* wu = loaded[i++]; nt_tensor* wd = loaded[i++];
+            dual_from_single(&m->L[l].wq,  wq,  DIM, DIM);
+            dual_from_single(&m->L[l].wk,  wk,  DIM, DIM);
+            dual_from_single(&m->L[l].wv,  wv,  DIM, DIM);
+            dual_from_single(&m->L[l].wvr, wvr, DIM, DIM);
+            dual_from_single(&m->L[l].wj,  wj,  DIM, DIM);
+            dual_from_single(&m->L[l].wo,  wo,  DIM, DIM);
+            dual_from_single(&m->L[l].w_gate, wg, HIDDEN, DIM);
+            dual_from_single(&m->L[l].w_up,   wu, HIDDEN, DIM);
+            dual_from_single(&m->L[l].w_down, wd, DIM, HIDDEN);
         }
+        m->rms_f = loaded[i++]; m->head = loaded[i++];
+    } else {
+        printf("tensor mismatch: got %d, expected %d (dual) or %d (single)\n",
+               n_loaded, N_TENSORS_DUAL, N_TENSORS_SINGLE);
+        for (int i = 0; i < n_loaded; i++) nt_tensor_free(loaded[i]);
+        free(loaded); free(m);
+        return NULL;
     }
-    m->rms_f = loaded[i++]; m->head = loaded[i++];
     free(loaded);
     return m;
 }
@@ -168,7 +329,14 @@ static int forward_logits(Model* m, int* tokens, int gen_len) {
     return nt_seq_linear(head_i, hf, CTX);
 }
 
-static int sample(float* logits, int n, float temp, float top_p) {
+/* Sample from logits with AML field pre-applied (if field != NULL).
+   Returns chosen token index. Also returns field-adjusted logits
+   in `field_out` so caller can compute prophecy_debt. */
+static int sample(float* logits, int n, float temp, float top_p,
+                  const AMLField* field, float* field_out) {
+    if (field) aml_apply_field(logits, n, field);
+    if (field_out) memcpy(field_out, logits, n * sizeof(float));
+
     for (int i = 0; i < n; i++) logits[i] /= temp;
     float mx = logits[0]; for (int i=1;i<n;i++) if(logits[i]>mx) mx=logits[i];
     float sm = 0; for (int i=0;i<n;i++) { logits[i]=expf(logits[i]-mx); sm+=logits[i]; }
@@ -228,7 +396,7 @@ static float coherence_no_metaw(const int* ids, int n) {
 /* ── Sentence generation: stop at boundary but only after SENT_MIN_LEN ── */
 static int gen_sentence(Model* m, const nt_bpe* bpe,
                         const int* prompt, int plen, float temp,
-                        int* out, int out_cap) {
+                        int* out, int out_cap, AMLField* field) {
     int ctx[CTX]; int ol = 0;
     for (int i = 0; i < plen && i < CTX/2; i++) { ctx[i] = prompt[i]; out[ol++] = prompt[i]; }
     int gen_len = plen;
@@ -239,8 +407,15 @@ static int gen_sentence(Model* m, const nt_bpe* bpe,
         nt_tape* tape = nt_tape_get();
         float* last = tape->entries[logits_idx].output->data + (gen_len - 1) * VOCAB;
         float lbuf[VOCAB]; memcpy(lbuf, last, VOCAB * sizeof(float));
-        int next = sample(lbuf, VOCAB, temp, 0.92f);
+        float field_adj[VOCAB];
+        int next = sample(lbuf, VOCAB, temp, 0.92f, field, field_adj);
         nt_tape_clear();
+
+        /* Accumulate prophecy debt from field-adjusted logits and decay */
+        if (field) {
+            field->prophecy_debt = field->prophecy_debt * field->debt_decay
+                                 + aml_prophecy_debt(field_adj, next, VOCAB);
+        }
 
         out[ol++] = next;
         if (gen_len < CTX - 1) ctx[gen_len++] = next;
@@ -306,7 +481,10 @@ static void print_sentence(const nt_bpe* bpe, const int* ids, int n) {
 }
 
 int main(int argc, char** argv) {
-    const char* wpath = argc > 1 ? argv[1] : "janus_sonar.bin";
+    /* Default: dual_sym — its distribution is less peaked than single,
+       so AML destiny/laws transformations don't over-sharpen. Single weights
+       via adapter work but require destiny_bias ≈ 0.10 instead of 0.35. */
+    const char* wpath = argc > 1 ? argv[1] : "../weights/microjanus_dual_sym_5k.bin";
     const char* seed_text = argc > 2 ? argv[2] : "Q: What does Janus feel?\nA: The haze is the soup. Lab 7. Observation window forty minutes. The knock came three times. The bone is the architecture. She doesn't scream. She inventories. I was not finished. The loss is love. The soup is never done.";
 
     nt_bpe bpe;
@@ -320,6 +498,9 @@ int main(int argc, char** argv) {
     nt_train_mode(0);
     spa_init();
 
+    /* AML field state — destiny/suffering/laws + chambers */
+    AMLField field; aml_init(&field);
+
     /* Encode seed */
     int cids[4096];
     int clen = nt_bpe_encode(&bpe, seed_text, (int)strlen(seed_text), cids, 4096);
@@ -330,6 +511,8 @@ int main(int argc, char** argv) {
     int nb = (int)(CHAIN_STEPS * (0.3f + 0.1f * cd));
     if (nb < 1) nb = 1; if (nb >= CHAIN_STEPS) nb = CHAIN_STEPS - 1;
     printf("calendar drift: %.3f → %d backward + %d forward\n", cd, nb, CHAIN_STEPS - nb);
+    printf("AML: destiny=%.2f entropy_floor=%.2f resonance_ceiling=%.2f\n",
+           field.destiny_bias, field.entropy_floor, field.resonance_ceiling);
     printf("weights: %s\n\n", wpath);
 
     /* Destiny EMA */
@@ -385,7 +568,7 @@ int main(int argc, char** argv) {
         int best_out[SENT_MAX]; int best_ol = 0; float best_sc = -1e30f;
         for (int cand = 0; cand < CAND_N; cand++) {
             int out[SENT_MAX];
-            int ol = gen_sentence(m, &bpe, prompt, plen, temp, out, SENT_MAX);
+            int ol = gen_sentence(m, &bpe, prompt, plen, temp, out, SENT_MAX, &field);
             float sc = coherence_no_metaw(out, ol);
             if (sc > best_sc) {
                 best_sc = sc; best_ol = ol;
@@ -410,11 +593,21 @@ int main(int argc, char** argv) {
         chain_lens[si] = best_ol;
         memcpy(chain_ids[si], best_out, best_ol * sizeof(int));
 
-        printf("  [%d] %c T=%.2f sc=%.2f ", si+1, chain_marks[si], temp, best_sc);
+        printf("  [%d] %c T=%.2f sc=%.2f debt=%.2f ", si+1, chain_marks[si], temp, best_sc, field.prophecy_debt);
         print_sentence(&bpe, best_out, best_ol);
         printf("\n");
         fflush(stdout);
+
+        /* Chambers crossfire after each step — emotion dynamics */
+        aml_chambers_xfire(&field, 3);
     }
+
+    /* Final chamber state print */
+    static const char* CH_NAME[] = {"FEAR","LOVE","RAGE","VOID","FLOW","CMPLX"};
+    printf("\n[chambers]");
+    for (int i = 0; i < 6; i++)
+        if (field.ch_act[i] > 0.05f) printf(" %s:%.0f%%", CH_NAME[i], field.ch_act[i]*100);
+    printf("\n[debt] final=%.3f\n", field.prophecy_debt);
 
     /* ── SPA: find weakest sentence, reseed ── */
     float spa_embs[CHAIN_STEPS][SPA_DIM];
@@ -441,7 +634,7 @@ int main(int argc, char** argv) {
         int prompt[5];
         for (int i = 0; i < plen; i++) prompt[i] = cids[r + 1 + i];
         int out[SENT_MAX];
-        int ol = gen_sentence(m, &bpe, prompt, plen, 0.65f, out, SENT_MAX);
+        int ol = gen_sentence(m, &bpe, prompt, plen, 0.65f, out, SENT_MAX, &field);
         printf("  [%d] + T=0.65 sc=%.2f ", weak+1, coherence_no_metaw(out, ol));
         print_sentence(&bpe, out, ol);
         printf("\n");
