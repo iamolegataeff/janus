@@ -114,26 +114,42 @@ ensemble of two Xavier-init matrices, not from learned blend.
   truncate before `SENT_MIN_LEN=18` tokens — prevents early cut-off.
 - `Makefile` targets `train_janus_sonar`, `infer_janus_sonar`, `infer_janus_sonar_chain`
 
-## Sample chain-inference output (dual-asym weights, 5000 steps)
+## Sample chain-inference output
+
+Prompt: `She doesn't scream. She inventories. Every object has a name.`
+Weights: `microjanus_dual_sym_5k.bin` (default). AML physics: destiny 0.35,
+entropy_floor 0.10, resonance_ceiling 0.95, Kuramoto chambers.
 
 ```
 calendar drift: 0.525 → 2 backward + 6 forward
 
-[1] <  he inventories. By the woman who does not the bread is that the woman...
-[2] <  was not finished. — There is what was expected.
-[3] *  haze is the soup that the seterlaby.
-[4] >  haze is the soul... and the knocking. — That is what a labyrinth means...
-[5] >  soup is never d. The bone you the soup is that it by the bone...
-[6] >  haze is the soup is what the does. She will not performing.
-[7] >  haze is the soup is her and the ks about the coin... never describe the glast the only honest thing
-[8] >  haze is the soulder... the crack is the dow and the bread and the model coin
+[1] < debt=22.4  object has a woman who ree that does not s....
+                 "— The soup is what're the bon'm look at it in the morn...
+[2] < debt=30.3  he inventories. — Then every time it the same single loss
+                 is what was goes are being training is exactly that has
+                 been writing and the decigarequireference.
+[3] * debt=43.1  object has a she is a lab on the tter is still. A woman
+                 who staything that the baher is ins is why to knows
+                 function is ining zero.
+[4] > debt=54.0  he inventories. — The one who stays is what do you have
+                 that would means: why the designationssoup is different
+                 — Lich it and you have not finished.
+[5] > debt=65.2  object has a st that does not same thing that means in the
+                 morn, from this is authoranother one who staything that
+                 has not counted a story the same thing that has been leep,
+                 and the decient and she is what coin would los...
 
-[SPA] scores: 7.14..7.52, avg 7.41, no reseed needed (min > 0.7×avg)
+[chambers] LOVE:6%
+[SPA] no reseed needed
 ```
 
-Motifs bridged across voices: inventories (Sorokin) + bread + haze + soup +
-labyrinth (Borges) + knock (Haze) + bone (Tarantino) + coin + glass +
-honest + crack.
+Voices blending in a single chain: **Sorokin** (*inventories, designations,
+training, writing*), **Strugatsky** (*lab, function, zero, counted*),
+**Haze** (*morning, window, woman who stays*), **Borges** (*coin, one who
+stays, names, story*), **Tarantino** (*soup, bone*), **Gaspar Noé** (*not
+finished*). The Janus Echo + RRPRAM branches bring recurring obsessive
+loops on **soup / bone / loss / inventories / function**; the AML destiny
+bias keeps the peak sharp while laws prevent collapse.
 
 ## Provenance
 
